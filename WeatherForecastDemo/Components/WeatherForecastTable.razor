@@ -1,0 +1,57 @@
+﻿@using WeatherForecastDemo.Models
+@using WeatherForecastDemo.Services
+@inject WeatherDataService WeatherDataService
+
+@if (Forecasts == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            @foreach (var forecast in Forecasts)
+            {
+                <th>@forecast.Name</th>
+            }
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            @foreach (var forecast in Forecasts)
+            {
+                <td>@forecast.DetailedForecast</td>
+            }
+        </tr>
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public string Zone { get; set; }
+    
+    private Dictionary<string, List<Forecast>> _forecasts = new();
+
+    private List<Forecast> Forecasts => string.IsNullOrEmpty(Zone) || !_forecasts.ContainsKey(Zone) ? null : _forecasts[Zone];
+
+    protected override void OnInitialized()
+    {
+        WeatherDataService.Forecasts.Subscribe(forecasts =>
+        {
+            _forecasts = forecasts;
+            StateHasChanged();
+        });
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (string.IsNullOrEmpty(Zone))
+            return;
+        WeatherDataService.GetForecasts(Zone);
+    }
+
+}
