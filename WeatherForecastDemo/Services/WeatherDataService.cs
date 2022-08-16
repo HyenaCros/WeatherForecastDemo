@@ -28,17 +28,32 @@ public class WeatherDataService
     {
         if (_zones.Value.ContainsKey(state))
             return;
-        var response = await _httpClient.GetFromJsonAsync<GetZoneResponse>($"/zones/public?area={Enum.GetName(state)}");
-        _zones.Value[state] = response.Features.Select(x => x.Properties).OrderBy(x => x.Name).ToList();
-        _zones.OnNext(_zones.Value);
+        try
+        {
+            var response = await _httpClient.GetFromJsonAsync<GetZoneResponse>($"/zones/public?area={Enum.GetName(state)}");
+            _zones.Value[state] = response!.Features.Select(x => x.Properties).OrderBy(x => x.Name).ToList();
+            _zones.OnNext(_zones.Value);
+        }
+        catch (HttpRequestException e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        
     }
 
     public async void GetForecasts(string zone)
     {
         if (_forecasts.Value.ContainsKey(zone))
             return;
-        var response = await _httpClient.GetFromJsonAsync<GetForecastResponse>($"/zones/public/{zone}/forecast");
-        _forecasts.Value[zone] = response.Properties.Periods;
-        _forecasts.OnNext(_forecasts.Value);
+        try
+        {
+            var response = await _httpClient.GetFromJsonAsync<GetForecastResponse>($"/zones/public/{zone}/forecast");
+            _forecasts.Value[zone] = response!.Properties.Periods;
+            _forecasts.OnNext(_forecasts.Value);
+        }
+        catch (HttpRequestException e)
+        {
+            Console.WriteLine(e.Message);
+        }
     }
 }
